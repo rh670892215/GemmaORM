@@ -13,6 +13,7 @@ func (s *Session) Insert(values ...interface{}) (int64, error) {
 	for _, value := range values {
 		// 这里先调用model进行表schema解析
 		table := s.Model(value).GetRefTable()
+		s.CallMethod(BeforeInsert, value)
 		recordValue := table.RecordValues(value)
 		recordValues = append(recordValues, recordValue)
 		// 添加insert语句
@@ -25,6 +26,7 @@ func (s *Session) Insert(values ...interface{}) (int64, error) {
 	if err != nil {
 		return 0, err
 	}
+	s.CallMethod(AfterInsert, nil)
 	return res.RowsAffected()
 }
 
@@ -39,29 +41,34 @@ func (s *Session) Update(values ...interface{}) (int64, error) {
 		}
 	}
 
+	s.CallMethod(BeforeUpdate, nil)
 	s.clause.Set(clause.UPDATE, s.GetRefTable().Name, valuesTable)
 	sql, args := s.clause.Build(clause.UPDATE, clause.WHERE)
 	res, err := s.Raw(sql, args...).Exec()
 	if err != nil {
 		return 0, err
 	}
+	s.CallMethod(AfterUpdate, nil)
 	return res.RowsAffected()
 }
 
 // Delete 删除指定记录
 func (s *Session) Delete() (int64, error) {
 	// delete from user where [condition]
+	s.CallMethod(BeforeDelete, nil)
 	s.clause.Set(clause.DELETE, s.tableSchema.Name)
 	sql, vars := s.clause.Build(clause.DELETE, clause.WHERE)
 	res, err := s.Raw(sql, vars...).Exec()
 	if err != nil {
 		return 0, err
 	}
+	s.CallMethod(AfterDelete, nil)
 	return res.RowsAffected()
 }
 
 // Find 查找匹配的记录，并写入value，value需传入指针
 func (s *Session) Find(value interface{}) error {
+	s.CallMethod(BeforeQuery, nil)
 	// select * from user
 	valueSlice := reflect.Indirect(reflect.ValueOf(value))
 	// 第一次Elem()调用，获取slice元素类型 - struct(kind 25)
@@ -89,6 +96,7 @@ func (s *Session) Find(value interface{}) error {
 			return err
 		}
 
+		s.CallMethod(AfterQuery, dest.Addr().Interface())
 		valueSlice.Set(reflect.Append(valueSlice, dest))
 	}
 
