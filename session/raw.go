@@ -11,12 +11,20 @@ import (
 // Session 一次与数据库交互的会话
 type Session struct {
 	db   *sql.DB
+	tx   *sql.Tx
 	sql  strings.Builder
 	vars []interface{}
 
 	clause      *clause.Clause
 	tableSchema *schema.Schema
 	dialect     dialect.Dialect
+}
+
+// CommonDB 数据库最小功能集合
+type CommonDB interface {
+	Query(query string, args ...interface{}) (*sql.Rows, error)
+	QueryRow(query string, args ...interface{}) *sql.Row
+	Exec(query string, args ...interface{}) (sql.Result, error)
 }
 
 // NewSession new session
@@ -35,7 +43,10 @@ func (s *Session) Clear() {
 }
 
 // GetDB 获取本session连接的数据库
-func (s *Session) GetDB() *sql.DB {
+func (s *Session) GetDB() CommonDB {
+	if s.tx != nil {
+		return s.tx
+	}
 	return s.db
 }
 

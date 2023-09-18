@@ -2,6 +2,7 @@ package GemmaORM
 
 import (
 	"GemmaORM/dialect"
+	"GemmaORM/log"
 	"GemmaORM/session"
 	"database/sql"
 	"errors"
@@ -39,4 +40,26 @@ func (e *Engine) NewSession() *session.Session {
 // Close 关闭数据库连接
 func (e *Engine) Close() {
 	e.db.Close()
+}
+
+type TxFunc func(*session.Session) (interface{}, error)
+
+func (e *Engine) Transaction(f TxFunc) (res interface{}, err error) {
+	s := e.NewSession()
+	if err := s.Begin(); err != nil {
+		return nil, err
+	}
+	defer func() {
+		if p := recover(); p != nil {
+			log.Info("come in recover rollback")
+			log.Info(p)
+			_ = s.RollBack()
+		} else if err != nil {
+			log.Info("come in err rollback")
+			_ = s.RollBack()
+		} else {
+			err = s.Commit()
+		}
+	}()
+	return f(s)
 }

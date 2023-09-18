@@ -8,6 +8,7 @@ import (
 // Dialect 封装底层数据库的差异
 type Dialect interface {
 	DataType(value reflect.Value) string
+	TableExist(tableName string) (string, []interface{})
 }
 
 var dialectMap map[string]Dialect

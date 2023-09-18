@@ -42,3 +42,12 @@ func (s *Session) DropTable() error {
 	_, err := s.Raw(sql).Exec()
 	return err
 }
+
+// HasTable 判断表是否存在
+func (s *Session) HasTable() bool {
+	sql, vars := s.dialect.TableExist(s.GetRefTable().Name)
+	row := s.Raw(sql, vars...).QueryRow()
+	var resName string
+	_ = row.Scan(&resName)
+	return resName == s.GetRefTable().Name
+}

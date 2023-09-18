@@ -36,3 +36,9 @@ func (s *Sqlite3) DataType(value reflect.Value) string {
 	}
 	return ""
 }
+
+// TableExist 输出判断表是否存在的sql
+func (s *Sqlite3) TableExist(tableName string) (string, []interface{}) {
+	vars := []interface{}{tableName}
+	return "SELECT name FROM sqlite_master WHERE type='table' and name = ?", vars
+}
