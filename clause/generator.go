@@ -76,7 +76,7 @@ func _delete(values ...interface{}) (string, []interface{}) {
 
 // 插入记录(单条),input : tableName,[]string{"name","age"}
 func _insert(values ...interface{}) (string, []interface{}) {
-	// insert into user values ("bank",25)
+	// insert into user (name,age)
 	tableName := values[0]
 	args := strings.Join(values[1].([]string), ",")
 	return fmt.Sprintf("insert into %s (%s)", tableName, args), []interface{}{}

@@ -51,8 +51,6 @@ func (e *Engine) Transaction(f TxFunc) (res interface{}, err error) {
 	}
 	defer func() {
 		if p := recover(); p != nil {
-			log.Info("come in recover rollback")
-			log.Info(p)
 			_ = s.RollBack()
 		} else if err != nil {
 			log.Info("come in err rollback")

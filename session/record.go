@@ -71,9 +71,9 @@ func (s *Session) Find(value interface{}) error {
 	s.CallMethod(BeforeQuery, nil)
 	// select * from user
 	valueSlice := reflect.Indirect(reflect.ValueOf(value))
-	// 第一次Elem()调用，获取slice元素类型 - struct(kind 25)
+	// 第一次Elem()调用，获取slice元素类型
 	elementType := valueSlice.Type().Elem()
-	// 第二次Elem()调用，获取slice的struct元素的具体类型
+	// 第二次Elem()调用，获取新创建的slice元素实例
 	table := s.Model(reflect.New(elementType).Elem().Interface()).GetRefTable()
 
 	s.clause.Set(clause.SELECT, table.Name, table.FieldNames)
@@ -84,6 +84,7 @@ func (s *Session) Find(value interface{}) error {
 	}
 
 	for rows.Next() {
+		// 获取创建的slice的每个元素类型
 		dest := reflect.New(elementType).Elem()
 		var values []interface{}
 		for _, name := range s.GetRefTable().FieldNames {
@@ -103,7 +104,7 @@ func (s *Session) Find(value interface{}) error {
 	return rows.Close()
 }
 
-// Where 条件语句，支持链式调用，desc : name = ?,args : "bank","emma"
+// Where 条件语句，支持链式调用，desc : name = ?,args : "bank"
 func (s *Session) Where(desc string, args ...interface{}) *Session {
 	var params []interface{}
 	// 将desc和args数组打平，统一成数组传入set
